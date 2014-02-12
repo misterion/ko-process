@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit 
+    bootstrap="vendor/autoload.php"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    stopOnFailure="true"
+    syntaxCheck="true">
+
+    <testsuites>
+        <testsuite name="basic">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">src</directory>
+        </whitelist>
+    </filter>
+
+    <logging>
+        <log type="coverage-text" target="php://stdout"/>
+
+        <log type="coverage-html" target="./build/" charset="UTF-8"
+             yui="true" highlight="false"
+             lowUpperBound="35" highLowerBound="70"/>
+        <!--<log type="coverage-xml" target="logs/phpunit.coverage.clover.xml"/>-->
+        <!--<log type="testdox-html" target="logs/testdox.html"/>-->
+    </logging>
+
+    <!--<logging>-->
+        <!--<log type="coverage-html"-->
+            <!--target="build/coverage"-->
+            <!--charset="UTF-8"-->
+            <!--yui="true"-->
+            <!--highlight="true"-->
+            <!--lowUpperBound="40"-->
+            <!--highLowerBound="70"-->
+        <!--/>-->
+    <!--</logging>-->
+
+</phpunit>

@@ -1,0 +1,29 @@
+{
+    "name": "misterion/ko-process",
+    "type": "library",
+    "description": "Simple pcntl fork wrapper and process manager",
+    "keywords": ["pcntl", "fork", "signal", "thread", "background", "posix", "cli", "utility", "exit_code"],
+    "homepage": "https://github.com/misterion/ko-process",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nikolay Bondarenko",
+            "email": "misterionkell@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "suggest": {
+        "ext-pcntl": "",
+        "ext-posix": "",
+        "ext-proctitle": ""
+    },
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.8.x-dev"
+    },
+    "autoload": {
+        "psr-0": { "Ko": "src" }
+    }
+}
