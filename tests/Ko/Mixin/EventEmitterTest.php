@@ -22,7 +22,13 @@ class EventEmitterTest extends \PHPUnit_Framework_TestCase
         });
 
         $obj->emit('test');
-
         $this->assertTrue($wasEmitted);
+    }
+
+    public function testEmitUnexistingEvent()
+    {
+        /** @var \Ko\Mixin\EventEmitter $obj */
+        $obj = $this->getObjectForTrait('Ko\Mixin\EventEmitter');
+        $obj->emit('test');
     }
 }

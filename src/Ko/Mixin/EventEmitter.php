@@ -29,6 +29,10 @@ trait EventEmitter
     public function emit($name)
     {
         $eventName = 'event:' . $name;
+        if (!isset($this->subscribers[$eventName])) {
+            return;
+        }
+
         foreach ($this->subscribers[$eventName] as $fn) {
             $fn();
         }
