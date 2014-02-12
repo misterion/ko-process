@@ -52,7 +52,7 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         });
         $process->wait();
 
-        $this->assertNotEquals(0, $process->getStatus());
+        $this->assertNotEquals(0, $process->getExitStatus());
     }
 
     public function testSuccessStatusAfterFork()
