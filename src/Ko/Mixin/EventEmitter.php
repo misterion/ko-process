@@ -26,7 +26,7 @@ trait EventEmitter
         $this->subscribers[$eventName][] = $fn;
     }
 
-    public function emit($name)
+    public function emit($name, $args = null)
     {
         $eventName = 'event:' . $name;
         if (!isset($this->subscribers[$eventName])) {
@@ -34,7 +34,7 @@ trait EventEmitter
         }
 
         foreach ($this->subscribers[$eventName] as $fn) {
-            $fn();
+            $fn($args);
         }
     }
 } 
