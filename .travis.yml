@@ -8,4 +8,4 @@ before_script:
     - wget http://getcomposer.org/composer.phar
     - php composer.phar install --dev
 
-script: phpunit --coverage-text
+script: phpunit --coverage-text --exclude-group ProcessTitle

@@ -10,7 +10,7 @@
     syntaxCheck="true">
 
     <testsuites>
-        <testsuite name="basic">
+        <testsuite name="Main">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

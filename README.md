@@ -14,13 +14,14 @@ Requirements
 
     PHP >= 5.4
     pcntl extension installed
+    posix extension installed
 
 
 Installation
 ------------
 
 The recommended way to install library is [composer](http://getcomposer.org).
-You can see [package information on Packagist][ComposerPackage].
+You can see [package information on Packagist](https://packagist.org/packages/misterion/ko-process).
 
 ```JSON
 {
