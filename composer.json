@@ -12,12 +12,12 @@
         }
     ],
     "suggest": {
-        "ext-proctitle": ""
+        "ext-proctitle": "*"
     },
     "require": {
         "php": ">=5.4.0",
-        "ext-pcntl": "",
-        "ext-posix": ""
+        "ext-pcntl": "*",
+        "ext-posix": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "3.8.x-dev"
