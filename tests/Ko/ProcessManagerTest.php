@@ -33,12 +33,13 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('Ko\Process', $process);
     }
 
-    public function testReSpawnIfProcessExit()
+    public function testReSpawnIfProcessFailExit()
     {
         $m = new ProcessManager();
         $process = $m->spawn(
             function (Process $process) {
                 usleep(5000);
+                exit(-1);
             }
         );
 
@@ -47,6 +48,19 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
 
         $pid2 = $process->getPid();
         $this->assertNotEquals($pid, $pid2);
+    }
+
+    public function testNotReSpawnIfProcessSuccessExit()
+    {
+        $m = new ProcessManager();
+        $process = $m->spawn(
+            function (Process $process) {
+                usleep(5000);
+            }
+        );
+
+        $process->wait();
+        $this->assertFalse($m->hasAlive());
     }
 
     public function testHasAlive()
