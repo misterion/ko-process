@@ -63,7 +63,10 @@ class ProcessManager implements \Countable
         }
 
         if (!$this->sigTerm) {
-            $this->internalSpawn($this->spawnWatch[$pid]);
+            $p = $this->spawnWatch[$pid];
+            if (!$p->isSuccessExit()) {
+                $this->internalSpawn($this->spawnWatch[$pid]);
+            }
         }
 
         unset($this->spawnWatch[$pid]);

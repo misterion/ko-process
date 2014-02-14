@@ -148,7 +148,7 @@ class Process
     public function wait()
     {
         $this->internalWait();
-        $event = (pcntl_wifexited($this->status) && ($this->exitCode === 0))
+        $event = $this->isSuccessExit()
             ? 'success'
             : 'error';
 
@@ -165,7 +165,17 @@ class Process
         }
 
         pcntl_waitpid($this->pid, $this->status);
+    }
+
+    /**
+     * Check exit code and return TRUE if process was ended successfully.
+     *
+     * @return bool
+     */
+    public function isSuccessExit()
+    {
         $this->exitCode = pcntl_wexitstatus($this->status);
+        return (pcntl_wifexited($this->status) && ($this->exitCode === 0));
     }
 
     /**
