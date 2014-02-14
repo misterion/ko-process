@@ -8,13 +8,13 @@ namespace Ko\Mixin;
  * @package Ko\Mixin
  * @author Nikolay Bondarenko <misterionkell@gmail.com>
  * @version 1.0
+ *
+ * @group ProcessTitle
  */
 class ProcessTitleTest extends \PHPUnit_Framework_TestCase
 {
     public function testSetProcessTitle()
     {
-        $this->markTestSkipped('Enable if need it');
-
         /** @var \Ko\Mixin\ProcessTitle $obj */
         $obj = $this->getObjectForTrait('Ko\Mixin\ProcessTitle');
         $obj->setProcessTitle('test title');

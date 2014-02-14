@@ -14,52 +14,107 @@ class ProcessManager implements \Countable
 {
     use Mixin\ProcessTitle;
 
+    const WAIT_IDLE = 1000;
     /**
-     *
      * @var Process[]
      */
     protected $children;
 
     /**
-     * @var int
+     * @var Process[]
      */
-    protected $maxChildren;
+    protected $spawnWatch;
+
+    /**
+     * @var bool
+     */
+    protected $sigTerm;
 
     public function __construct()
     {
         $this->children = [];
-        $this->maxChildren = 1;
+        $this->spawnWatch = [];
+        $this->sigTerm = false;
 
         $this->setupSignalHandlers();
     }
 
     protected function setupSignalHandlers()
     {
-        pcntl_signal(SIGCHLD, function($signal) {
-            while(($pid = pcntl_waitpid(-1, $status, WNOHANG)) > 0 ) {
-                unset($this->children[$pid]);
+        pcntl_signal(SIGCHLD, function () {
+            while (($pid = pcntl_waitpid(-1, $status, WNOHANG)) > 0) {
+                $this->childProcessDie($pid);
+            }
+        });
+
+        pcntl_signal(SIGTERM, function () {
+            $this->sigTerm = true;
+            foreach ($this->children as $process) {
+                $process->kill();
             }
         });
     }
 
-    /**
-     * Set the max forked process count.
-     *
-     * @param int $maxChildren
-     */
-    public function setMaxChildren($maxChildren)
+    protected function childProcessDie($pid)
     {
-        $this->maxChildren = $maxChildren;
+        unset($this->children[$pid]);
+        if (!isset($this->spawnWatch[$pid])) {
+            return;
+        }
+
+        if (!$this->sigTerm) {
+            $this->internalSpawn($this->spawnWatch[$pid]);
+        }
+
+        unset($this->spawnWatch[$pid]);
     }
 
-    /**
-     * Get the max forked process count.
-     *
-     * @return int
-     */
-    public function getMaxChildren()
+    protected function internalSpawn(Process $p)
     {
-        return $this->maxChildren;
+        $p = $this->internalFork($p);
+        $this->spawnWatch[$p->getPid()] = $p;
+
+        return $p;
+    }
+
+    protected function internalFork(Process $p)
+    {
+        $sm = new SharedMemory();
+        $p->setSharedMemory($sm);
+
+        $pid = pcntl_fork();
+        if (-1 === $pid) {
+            throw new \RuntimeException('Failure on pcntl_fork');
+        }
+
+        if ($pid) {
+            $p->setPid($pid);
+            $this->waitProcessRunning($p);
+
+            $this->children[$pid] = $p;
+
+            return $p;
+        }
+
+        $p->setPid(getmypid());
+        $p->run();
+
+        exit(0);
+    }
+
+    protected function waitProcessRunning(Process $p)
+    {
+        $x = 0;
+        $sm = $p->getSharedMemory();
+
+        while ($x++ < 100) {
+            usleep(self::WAIT_IDLE);
+            if ($sm['started'] === true) {
+                return;
+            }
+        }
+
+        throw new \RuntimeException('Wait process running timeout for child pid ' . $p->getPid());
     }
 
     /**
@@ -72,23 +127,28 @@ class ProcessManager implements \Countable
      */
     public function fork(callable $callable)
     {
+        return $this->internalFork($this->createProcess($callable));
+    }
+
+    protected function createProcess(callable $callable)
+    {
         $p = new Process($callable);
+        $p->on('exit', function ($pid) {
+            $this->childProcessDie($pid);
+        });
 
-        $pid = pcntl_fork();
-        if (-1 === $pid) {
-            throw new \RuntimeException('Failure on pcntl_fork');
-        }
+        return $p;
+    }
 
-        if ($pid) {
-            $p->setPid($pid);
-            $this->children[$pid] = $p;
-            return $p;
-        }
-
-        $p->setPid(getmypid());
-        $p->run();
-
-        exit(0);
+    /**
+     * @param callable $callable Callable with prototype like function(Ko\Process $p) {}
+     *
+     * @return Process
+     * @throws \RuntimeException
+     */
+    public function spawn(callable $callable)
+    {
+        return $this->internalSpawn($this->createProcess($callable));
     }
 
     /**
@@ -97,8 +157,8 @@ class ProcessManager implements \Countable
      */
     public function wait()
     {
-        foreach ($this->children as $child) {
-            $child->wait();
+        while ($this->hasAlive()) {
+            usleep(100000);
         }
     }
 

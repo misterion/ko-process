@@ -47,13 +47,12 @@ class Semaphore
     }
 
     /**
-     * Acquire a semaphore.
+     * Return TRUE is semaphore acquired.
      *
-     * @return bool
+     * @return boolean
      */
-    public function acquire()
+    public function isAcquired()
     {
-        $this->isAcquired = sem_acquire($this->mutex);
         return $this->isAcquired;
     }
 
@@ -65,16 +64,7 @@ class Semaphore
     public function release()
     {
         $this->isAcquired = !sem_release($this->mutex);
-        return $this->isAcquired;
-    }
 
-    /**
-     * Return TRUE is semaphore acquired.
-     *
-     * @return boolean
-     */
-    public function isAcquired()
-    {
         return $this->isAcquired;
     }
 
@@ -90,6 +80,19 @@ class Semaphore
         $this->acquire();
         $result = $callable();
         $this->release();
+
         return $result;
+    }
+
+    /**
+     * Acquire a semaphore.
+     *
+     * @return bool
+     */
+    public function acquire()
+    {
+        $this->isAcquired = sem_acquire($this->mutex);
+
+        return $this->isAcquired;
     }
 }

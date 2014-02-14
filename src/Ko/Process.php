@@ -13,6 +13,11 @@ class Process
     use Mixin\ProcessTitle;
     use Mixin\EventEmitter;
 
+    /**
+     * Posix process id.
+     *
+     * @var int
+     */
     protected $pid;
 
     /**
@@ -23,17 +28,56 @@ class Process
     /**
      * @var int
      */
-    protected $exitStatus;
+    protected $exitCode;
 
     /**
      * @var callable
      */
     protected $callable;
 
+    /**
+     * @var bool
+     */
+    protected $shouldShutdown;
+    /**
+     * @var bool
+     */
+    protected $running;
+
+    /**
+     * @var SharedMemory
+     */
+    protected $sharedMemory;
+
     public function __construct(callable $callable)
     {
         $this->pid = 0;
         $this->callable = $callable;
+        $this->shouldShutdown = false;
+    }
+
+    /**
+     * @return \Ko\SharedMemory
+     */
+    public function getSharedMemory()
+    {
+        return $this->sharedMemory;
+    }
+
+    /**
+     * @param \Ko\SharedMemory $sharedMemory
+     */
+    public function setSharedMemory($sharedMemory)
+    {
+        $this->sharedMemory = $sharedMemory;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isShouldShutdown()
+    {
+        return $this->shouldShutdown;
     }
 
     /**
@@ -41,9 +85,25 @@ class Process
      */
     public function run()
     {
+        $this->sharedMemory['started'] = true;
+
+        pcntl_signal(SIGTERM, function () {
+            $this->shouldShutdown = true;
+        });
+
         /** @var callable $callable */
         $callable = $this->callable;
         $callable($this);
+    }
+
+    /**
+     * Return the process ID.
+     *
+     * @return integer
+     */
+    public function getPid()
+    {
+        return $this->pid;
     }
 
     /**
@@ -56,17 +116,8 @@ class Process
     public function setPid($pid)
     {
         $this->pid = $pid;
-        return $this;
-    }
 
-    /**
-     * Return the process ID.
-     *
-     * @return integer
-     */
-    public function getPid()
-    {
-        return $this->pid;
+        return $this;
     }
 
     /**
@@ -84,9 +135,9 @@ class Process
      *
      * @return int
      */
-    public function getExitStatus()
+    public function getExitCode()
     {
-        return $this->exitStatus;
+        return $this->exitCode;
     }
 
     /**
@@ -97,10 +148,11 @@ class Process
     public function wait()
     {
         $this->internalWait();
-        $event = (pcntl_wifexited($this->status) && ($this->exitStatus === 0))
+        $event = (pcntl_wifexited($this->status) && ($this->exitCode === 0))
             ? 'success'
             : 'error';
 
+        $this->emit('exit', $this->pid);
         $this->emit($event);
 
         return $this;
@@ -113,7 +165,7 @@ class Process
         }
 
         pcntl_waitpid($this->pid, $this->status);
-        $this->exitStatus = pcntl_wexitstatus($this->status);
+        $this->exitCode = pcntl_wexitstatus($this->status);
     }
 
     /**
@@ -126,6 +178,7 @@ class Process
     public function onError(callable $callable)
     {
         $this->on('error', $callable);
+
         return $this;
     }
 
@@ -139,6 +192,12 @@ class Process
     public function onSuccess(callable $callable)
     {
         $this->on('success', $callable);
+
         return $this;
+    }
+
+    public function kill($signal = SIGTERM)
+    {
+        posix_kill($this->pid, $signal);
     }
 }
