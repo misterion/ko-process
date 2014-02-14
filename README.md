@@ -58,6 +58,22 @@ for ($i = 0; $i < 10; $i++) {
 }
 $manager->wait();
 ```
+### Process title? ###
+
+Yes, both `ProcessManager` and `Process` can change process title with `setProcessTitle` function. Or you may use trait
+Ko\Mixin\ProcessTitle to add this to any class you want. Run sample with code
+
+```php
+$manager = new Ko\ProcessManager();
+$manager->setProcessTitle('I_am_a_master!');
+
+echo 'Press ctrl+c to exit';
+while(true) {
+    sleep(1);
+}
+```
+
+and `ps aux|grep I_am_a_master` or `top` to see you process title in linux process list.
 
 ### Spawn ###
 
@@ -75,6 +91,59 @@ for ($i = 0; $i < 10; $i++) {
 }
 $manager->wait(); //we have auto respawn for 10 forks
 ```
+
+Let`s explain you are writing something like queue worker based on AMPQ. So yoy can write something like this
+```php
+
+use PhpAmqpLib\Connection\AMQPConnection;
+use PhpAmqpLib\Message\AMQPMessage;
+
+$manager = new Ko\ProcessManager();
+$manager->setProcessTitle('Master:working...');
+
+$fork = $manager->spawn(function(Ko\Process $p) {
+    $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
+    $channel = $connection->channel();
+
+    $channel->queue_declare('hello', false, true, false, false);
+
+    $callback = function($msg) use (&$p) {
+        $p->setProcessTitle('Worker:processJob ' . $msg->body);
+
+        //will execute our job in separate process
+        $m = new Ko\ProcessManager();
+        $m->fork(function(Ko\Process $jobProcess) use ($msg) {
+            $jobProcess->setProcessTitle('Job:processing ' . $msg->body);
+
+            echo " [x] Received ", $msg->body, "\n";
+            sleep(2);
+            echo " [x] Done", "\n";
+        })->onSuccess(function() use ($msg){
+            //Ack on success
+            $msg->delivery_info['channel']
+                ->basic_ack($msg->delivery_info['delivery_tag']);
+        })->wait();
+
+        $p->setProcessTitle('Worker:waiting for job... ');
+
+        pcntl_signal_dispatch();
+        if ($p->isShouldShutdown()) {
+            exit();
+        }
+    };
+
+    $channel->basic_qos(null, 1, null);
+    $channel->basic_consume('hello', '', false, false, false, false, $callback);
+
+    while(count($channel->callbacks)) {
+        $channel->wait();
+    }
+
+    $channel->close();
+    $connection->close();
+});
+```
+
 
 ### Shared memory and Semaphore ###
 
