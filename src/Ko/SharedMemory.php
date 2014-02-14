@@ -57,7 +57,9 @@ class SharedMemory implements \ArrayAccess, \Countable
             shm_remove($this->id);
         }
 
-        unlink($this->file);
+        if (file_exists($this->file)) {
+            unlink($this->file);
+        }
     }
 
     /**
@@ -168,6 +170,4 @@ class SharedMemory implements \ArrayAccess, \Countable
     {
         return count($this->keyMapper);
     }
-
-
 }

@@ -49,9 +49,9 @@ class SharedMemoryTest extends \PHPUnit_Framework_TestCase
         $sm = new SharedMemory();
 
         $sm['test'] = 'value';
-        $this->assertCount(1, count($sm));
+        $this->assertCount(1, $sm);
 
         unset($sm['test']);
-        $this->assertCount(0, count($sm));
+        $this->assertCount(0, $sm);
     }
 }

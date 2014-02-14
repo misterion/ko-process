@@ -76,9 +76,7 @@ You can use `Semaphore` for inter process locking:
 
 $s = new Semaphore();
 $s->acquire();
-
 //do some job
-
 $s->release();
 
 //or
