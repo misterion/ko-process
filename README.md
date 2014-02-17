@@ -177,7 +177,7 @@ $s->tryExecute(function() {
 
 ### Credits ###
 
-Ko-process written as a part of [GameNet project](http://gamenet.ru) by [Nikolay Bondarenko][] (misterionkell at gmail.com).
+Ko-process written as a part of [GameNet project](http://gamenet.ru) by Nikolay Bondarenko (misterionkell at gmail.com).
 
 ### License ###
 
