@@ -2,7 +2,7 @@
     "name": "misterion/ko-process",
     "type": "library",
     "description": "Simple pcntl fork wrapper and process manager",
-    "keywords": ["pcntl", "fork", "signal", "thread", "background", "posix", "cli", "utility", "exit_code", "ampq"],
+    "keywords": ["pcntl", "fork", "signal", "thread", "background", "posix", "cli", "utility", "exit_code", "ampq", "sharedmemory", "semaphore"],
     "homepage": "https://github.com/misterion/ko-process",
     "license": "MIT",
     "authors": [

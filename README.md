@@ -144,7 +144,6 @@ $fork = $manager->spawn(function(Ko\Process $p) {
 });
 ```
 
-
 ### Shared memory and Semaphore ###
 
 The `Ko\SharedMemory` used `Semaphore` for internal locks so can be safely used for inter process communications.
@@ -175,3 +174,15 @@ $s->tryExecute(function() {
     //do some job
 });
 ```
+
+### Credits ###
+
+Ko-process written as a part of [GameNet project](http://gamenet.ru) by [Nikolay Bondarenko][] (misterionkell at gmail.com).
+
+### License ###
+
+Released under the [MIT](LICENSE) license.
+
+### Links ###
+
+* [Project profile on the Ohloh](https://www.ohloh.net/p/ko-process)
