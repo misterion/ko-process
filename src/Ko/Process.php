@@ -11,7 +11,10 @@ namespace Ko;
 class Process
 {
     use Mixin\ProcessTitle;
-    use Mixin\EventEmitter;
+    use Mixin\EventEmitter {
+        on as protected internalOn;
+        emit as protected internalEmit;
+    }
 
     /**
      * Posix process id.
@@ -152,8 +155,8 @@ class Process
             ? 'success'
             : 'error';
 
-        $this->emit('exit', $this->pid);
-        $this->emit($event);
+        $this->internalEmit('exit', $this->pid);
+        $this->internalEmit($event);
 
         return $this;
     }
@@ -187,8 +190,7 @@ class Process
      */
     public function onError(callable $callable)
     {
-        $this->on('error', $callable);
-
+        $this->internalOn('error', $callable);
         return $this;
     }
 
@@ -201,13 +203,31 @@ class Process
      */
     public function onSuccess(callable $callable)
     {
-        $this->on('success', $callable);
-
+        $this->internalOn('success', $callable);
         return $this;
     }
 
+    /**
+     * Send a signal to a process.
+     *
+     * @param int $signal
+     *
+     * @return $this;
+     */
     public function kill($signal = SIGTERM)
     {
         posix_kill($this->pid, $signal);
+        return $this;
+    }
+
+    /**
+     * Calls signal handlers for pending signals.
+     *
+     * @return $this;
+     */
+    public function dispatchSignals()
+    {
+        pcntl_signal_dispatch();
+        return $this;
     }
 }

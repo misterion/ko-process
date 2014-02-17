@@ -8,13 +8,32 @@ namespace Ko;
  * @package Ko
  * @author Nikolay Bondarenko <misterionkell@gmail.com>
  * @version 1.0
+ *
+ * @small
  */
 class ProcessManagerTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * @var ProcessManager
+     */
+    protected $manager;
+
+    public function setUp()
+    {
+        $this->manager = new ProcessManager();
+
+        $this->getTestResultObject()
+            ->setTimeoutForSmallTests(1);
+    }
+
+    public function tearDown()
+    {
+        unset($this->manager);
+    }
+
     public function testForkReturnProcess()
     {
-        $m = new ProcessManager();
-        $process = $m->fork(
+        $process = $this->manager->fork(
             function (Process $process) {
             }
         );
@@ -24,8 +43,7 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testSpawnReturnProcess()
     {
-        $m = new ProcessManager();
-        $process = $m->spawn(
+        $process = $this->manager->spawn(
             function (Process $process) {
             }
         );
@@ -35,8 +53,7 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testReSpawnIfProcessFailExit()
     {
-        $m = new ProcessManager();
-        $process = $m->spawn(
+        $process = $this->manager->spawn(
             function (Process $process) {
                 usleep(5000);
                 exit(-1);
@@ -52,43 +69,66 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testNotReSpawnIfProcessSuccessExit()
     {
-        $m = new ProcessManager();
-        $process = $m->spawn(
+        $process = $this->manager->spawn(
             function (Process $process) {
                 usleep(5000);
             }
         );
 
         $process->wait();
-        $this->assertFalse($m->hasAlive());
+        $this->assertFalse($this->manager->hasAlive());
     }
 
-    public function testHasAlive()
+    public function testHasAliveAfterFork()
     {
-        $m = new ProcessManager();
-        $m->fork(
+        $this->manager->fork(
             function (Process $process) {
                 usleep(5000);
             }
         );
 
-        $this->assertTrue($m->hasAlive());
-
-        $m->wait();
-        $this->assertFalse($m->hasAlive());
+        $this->assertTrue($this->manager->hasAlive());
     }
 
-    public function testCountable()
+    public function testHasNoAliveAfterWait()
     {
-        $m = new ProcessManager();
-        $m->fork(
+        $this->manager->fork(
             function (Process $process) {
                 usleep(5000);
             }
         );
 
-        $this->assertCount(1, $m);
-        $this->assertEquals(1, $m->getProcessCount());
+        $this->manager->wait();
+        $this->assertFalse($this->manager->hasAlive());
+    }
+
+    public function testCountableInterface()
+    {
+        $this->manager->fork(
+            function (Process $process) {
+                usleep(5000);
+            }
+        );
+
+        $this->assertCount(1, $this->manager);
+        $this->assertEquals(1, $this->manager->getProcessCount());
+    }
+
+    public function testShutdownHandlerWasCalledOnSigTerm()
+    {
+        $process = $this->manager->fork(function(Process $p) {
+            $m = new ProcessManager();
+            $m->onShutdown(function() use (&$p){
+                $sm = $p->getSharedMemory();
+                $sm['wasCalled'] = true;
+            })->fork(function() {
+                usleep(100000);
+            });
+            $m->wait();
+        })->kill()->wait();
+
+        $sm = $process->getSharedMemory();
+        $this->assertTrue($sm['wasCalled']);
     }
 }
  

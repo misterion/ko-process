@@ -61,13 +61,18 @@ $manager->wait();
 ### Process title? ###
 
 Yes, both `ProcessManager` and `Process` can change process title with `setProcessTitle` function. Or you may use trait
-Ko\Mixin\ProcessTitle to add this to any class you want. Run sample with code
+Ko\Mixin\ProcessTitle to add this to any class you want. Take attention about `ProcessManager::onShutdown` - use can
+set callable which would be called if `ProcessManager` catch `SIGTERM`. The handler would be called before child process
+would be shutdown. Run sample with code
 
 ```php
 $manager = new Ko\ProcessManager();
 $manager->setProcessTitle('I_am_a_master!');
+$manager->onShutdown(function() use ($manager) {
+    $manager-setProcessTitle('Catch sigterm.Quiting...');
+});
 
-echo 'Press ctrl+c to exit';
+echo 'Press ctrl+c to exit or execute `kill ' . getmypid() . '` from console';
 while(true) {
     sleep(1);
 }
@@ -92,7 +97,7 @@ for ($i = 0; $i < 10; $i++) {
 $manager->wait(); //we have auto respawn for 10 forks
 ```
 
-Let`s explain you are writing something like queue worker based on AMPQ. So yoy can write something like this
+Let`s explain you are writing something like queue worker based on PhpAmqpLib\AMPQ. So yoy can write something like this
 ```php
 
 use PhpAmqpLib\Connection\AMQPConnection;
@@ -100,8 +105,7 @@ use PhpAmqpLib\Message\AMQPMessage;
 
 $manager = new Ko\ProcessManager();
 $manager->setProcessTitle('Master:working...');
-
-$fork = $manager->spawn(function(Ko\Process $p) {
+$manager->spawn(function(Ko\Process $p) {
     $connection = new AMQPConnection('localhost', 5672, 'guest', 'guest');
     $channel = $connection->channel();
 
@@ -126,7 +130,9 @@ $fork = $manager->spawn(function(Ko\Process $p) {
 
         $p->setProcessTitle('Worker:waiting for job... ');
 
-        pcntl_signal_dispatch();
+        //IMPORTANT! You should call dispatchSignals them self to process pending signals.
+        $p->dispatchSignals();
+
         if ($p->isShouldShutdown()) {
             exit();
         }
@@ -142,6 +148,7 @@ $fork = $manager->spawn(function(Ko\Process $p) {
     $channel->close();
     $connection->close();
 });
+$manager->wait();
 ```
 
 ### Shared memory and Semaphore ###

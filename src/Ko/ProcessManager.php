@@ -13,6 +13,10 @@ declare(ticks = 1);
 class ProcessManager implements \Countable
 {
     use Mixin\ProcessTitle;
+    use Mixin\EventEmitter {
+        on as protected internalOn;
+        emit as protected internalEmit;
+    }
 
     const WAIT_IDLE = 1000;
     /**
@@ -49,6 +53,8 @@ class ProcessManager implements \Countable
 
         pcntl_signal(SIGTERM, function () {
             $this->sigTerm = true;
+            $this->internalEmit('shutdown');
+
             foreach ($this->children as $process) {
                 $process->kill();
             }
@@ -193,5 +199,18 @@ class ProcessManager implements \Countable
     public function count()
     {
         return count($this->children);
+    }
+
+    /**
+     * Master process shutdown handler. Shutdown handler called right after the SIGTERM catches by this class.
+     *
+     * @param callable $callable
+     *
+     * @return $this
+     */
+    public function onShutdown(callable $callable)
+    {
+        $this->internalOn('shutdown', $callable);
+        return $this;
     }
 }
