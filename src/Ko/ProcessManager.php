@@ -233,4 +233,15 @@ class ProcessManager implements \Countable
 
         return $this;
     }
+
+    /**
+     * Calls signal handlers for pending signals.
+     *
+     * @return $this;
+     */
+    public function dispatchSignals()
+    {
+        pcntl_signal_dispatch();
+        return $this;
+    }
 }

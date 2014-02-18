@@ -63,17 +63,20 @@ $manager->wait();
 Yes, both `ProcessManager` and `Process` can change process title with `setProcessTitle` function. Or you may use trait
 Ko\Mixin\ProcessTitle to add this to any class you want. Take attention about `ProcessManager::onShutdown` - use can
 set callable which would be called if `ProcessManager` catch `SIGTERM`. The handler would be called before child process
-would be shutdown. Run sample with code
+would be shutdown. We use `demonize` to detach from terminal. Run sample with code
 
 ```php
 $manager = new Ko\ProcessManager();
+$manager->demonize();
 $manager->setProcessTitle('I_am_a_master!');
 $manager->onShutdown(function() use ($manager) {
-    $manager-setProcessTitle('Catch sigterm.Quiting...');
+    echo 'Catch sigterm.Quiting...' . PHP_EOL;
+    exit();
 });
 
-echo 'Press ctrl+c to exit or execute `kill ' . getmypid() . '` from console';
+echo 'Execute `kill ' . getmypid() . '` from console to stop script' . PHP_EOL;
 while(true) {
+    $manager->dispatchSignals();
     sleep(1);
 }
 ```
