@@ -213,4 +213,24 @@ class ProcessManager implements \Countable
         $this->internalOn('shutdown', $callable);
         return $this;
     }
+
+    /**
+     * Forks the currently running process to detach from console.
+     *
+     * @return $this
+     * @throws \RuntimeException
+     */
+    public function demonize()
+    {
+        $pid = pcntl_fork();
+        if (-1 === $pid) {
+            throw new \RuntimeException('Failure on pcntl_fork');
+        }
+
+        if ($pid) {
+            exit(0);
+        }
+
+        return $this;
+    }
 }
