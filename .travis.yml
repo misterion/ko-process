@@ -6,6 +6,6 @@ php:
 
 before_script:
     - wget http://getcomposer.org/composer.phar
-    - php composer.phar install --dev
+    - php composer.phar install --dev --prefer-source
 
 script: phpunit --coverage-text --exclude-group ProcessTitle
