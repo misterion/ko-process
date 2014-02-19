@@ -153,6 +153,9 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testDemonize()
     {
+        if (!$this->manager->isProcessTitleSupported()) {
+            $this->markTestSkipped('This test need ProcessTitle to worl');
+        }
 
         $title = 'testDemonize_' . mt_rand(0, PHP_INT_MAX);
 

@@ -37,4 +37,14 @@ trait ProcessTitle
             return exec('ps -p ' . getmypid() . ' -o command| tail -1', $out);
         }
     }
+
+    /**
+     * Return True if feature supported.
+     *
+     * @return bool
+     */
+    public function isProcessTitleSupported()
+    {
+        return function_exists('cli_set_process_title') || function_exists('setproctitle');
+    }
 }

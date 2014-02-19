@@ -17,8 +17,11 @@ class ProcessTitleTest extends \PHPUnit_Framework_TestCase
     {
         /** @var \Ko\Mixin\ProcessTitle $obj */
         $obj = $this->getObjectForTrait('Ko\Mixin\ProcessTitle');
-        $obj->setProcessTitle('test title');
+        if (!$obj->isProcessTitleSupported()) {
+            $this->markTestSkipped('ProcessTitle not supported');
+        }
 
+        $obj->setProcessTitle('test title');
         $this->assertEquals('test title', $obj->getProcessTitle());
     }
 }
