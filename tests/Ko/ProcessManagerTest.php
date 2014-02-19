@@ -117,20 +117,43 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
     public function testShutdownHandlerWasCalledOnSigTerm()
     {
         $process = $this->manager->fork(function(Process $p) {
+            $sm = $p->getSharedMemory();
+
             $m = new ProcessManager();
-            $m->onShutdown(function() use (&$p){
-                $sm = $p->getSharedMemory();
+            $m->onShutdown(function() use (&$sm){
                 $sm['wasCalled'] = true;
             })->fork(function() {
-                usleep(100000);
+                usleep(300000);
             });
+
+            $sm['ready'] = true;
             $m->wait();
-        })->kill()->wait();
+        });
+
+        $this->waitReady($process);
+
+        $process->kill();
+        $this->manager->wait();
 
         $sm = $process->getSharedMemory();
         $this->assertTrue($sm['wasCalled']);
     }
 
+    private function waitReady(\Ko\Process $process)
+    {
+        $x = 100;
+        $sm = $process->getSharedMemory();
+        while ($x-- > 0) {
+            if (isset($sm['ready'])) {
+                break;
+            }
+            usleep(1000);
+        }
+    }
+
+    /**
+     * @group
+     */
     public function testDemonize()
     {
         $title = 'testDemonize_' . mt_rand(0, PHP_INT_MAX);
@@ -147,4 +170,3 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
         return is_numeric(exec('ps aux|grep -w ' . $title . ' |grep -v grep |awk \'{print $2}\'', $out));
     }
 }
- 

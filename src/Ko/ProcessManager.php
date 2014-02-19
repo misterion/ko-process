@@ -167,6 +167,7 @@ class ProcessManager implements \Countable
     public function wait()
     {
         while ($this->hasAlive()) {
+            $this->dispatchSignals();
             usleep(100000);
         }
     }
