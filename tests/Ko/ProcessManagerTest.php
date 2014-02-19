@@ -151,15 +151,13 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
         }
     }
 
-    /**
-     * @group
-     */
     public function testDemonize()
     {
+
         $title = 'testDemonize_' . mt_rand(0, PHP_INT_MAX);
 
         system('php ' . __DIR__ . '/Fixtures/demonize.php ' . $title . '  > /dev/null 2>/dev/null&');
-        usleep(100000);
+        sleep(1);
 
         $this->assertFalse($this->processExistsByTitle($title));
         $this->assertTrue($this->processExistsByTitle($title . '_afterDemonize'));
