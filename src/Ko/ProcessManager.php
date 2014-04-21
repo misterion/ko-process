@@ -97,11 +97,10 @@ class ProcessManager implements \Countable
         }
 
         if ($pid) {
-            $p->setPid($pid);
-            $this->waitProcessRunning($p);
-
             $this->children[$pid] = $p;
 
+            $p->setPid($pid);
+            $this->waitProcessRunning($p);
             return $p;
         }
 
