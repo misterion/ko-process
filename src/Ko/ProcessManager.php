@@ -47,7 +47,7 @@ class ProcessManager implements \Countable
     {
         pcntl_signal(SIGCHLD, function () {
             while (($pid = pcntl_waitpid(-1, $status, WNOHANG)) > 0) {
-                $this->childProcessDie($pid);
+                $this->childProcessDie($pid, $status);
             }
         });
 
@@ -61,7 +61,7 @@ class ProcessManager implements \Countable
         });
     }
 
-    protected function childProcessDie($pid)
+    protected function childProcessDie($pid, $status)
     {
         unset($this->children[$pid]);
         if (!isset($this->spawnWatch[$pid])) {
@@ -70,6 +70,8 @@ class ProcessManager implements \Countable
 
         if (!$this->sigTerm) {
             $p = $this->spawnWatch[$pid];
+            $p->setStatus($status);
+
             if (!$p->isSuccessExit()) {
                 $this->internalSpawn($this->spawnWatch[$pid]);
             }
@@ -86,6 +88,11 @@ class ProcessManager implements \Countable
         return $p;
     }
 
+    /**
+     * @param Process $p
+     *
+     * @return Process
+     */
     protected function internalFork(Process $p)
     {
         $sm = new SharedMemory();
@@ -141,8 +148,8 @@ class ProcessManager implements \Countable
     protected function createProcess(callable $callable)
     {
         $p = new Process($callable);
-        $p->on('exit', function ($pid) {
-            $this->childProcessDie($pid);
+        $p->on('exit', function ($pid) use ($p) {
+            $this->childProcessDie($pid, $p->getStatus());
         });
 
         return $p;

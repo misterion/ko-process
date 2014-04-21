@@ -134,6 +134,16 @@ class Process
     }
 
     /**
+     * Set status parameter
+     *
+     * @param int $status
+     */
+    public function setStatus($status)
+    {
+        $this->status = $status;
+    }
+
+    /**
      * Returns the return code of a terminated child.
      *
      * @return int
