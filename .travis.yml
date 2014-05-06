@@ -9,3 +9,7 @@ before_script:
     - php composer.phar install --dev
 
 script: phpunit --coverage-text --exclude-group ProcessTitle
+
+after_script:
+  - wget https://scrutinizer-ci.com/ocular.phar
+  - php ocular.phar code-coverage:upload --format=php-clover ./build/coverage.clover
