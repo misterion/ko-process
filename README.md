@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.org/misterion/ko-process.png?branch=master)](https://travis-ci.org/misterion/ko-process)
 [![Latest Stable Version](https://poser.pugx.org/misterion/ko-process/v/stable.png)](https://packagist.org/packages/misterion/ko-process)
+[![Code Coverage](https://scrutinizer-ci.com/g/misterion/ko-process/badges/coverage.png?s=5bbe5065d230fc69e11e3c34747fec724d3dd6d6)](https://scrutinizer-ci.com/g/misterion/ko-process/)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/misterion/ko-process/badges/quality-score.png?s=58747cee35694c4bc2b023b2ee5a66f4066de3f7)](https://scrutinizer-ci.com/g/misterion/ko-process/)
+[![Total Downloads](https://poser.pugx.org/misterion/ko-process/downloads.png)](https://packagist.org/packages/misterion/ko-process)
+[![Latest Unstable Version](https://poser.pugx.org/misterion/ko-process/v/unstable.png)](https://packagist.org/packages/misterion/ko-process)
 [![License](https://poser.pugx.org/misterion/ko-process/license.png)](https://packagist.org/packages/misterion/ko-process)
 
 Ko-Process allows for easy callable forking. It is object-oriented wrapper arount fork part of
