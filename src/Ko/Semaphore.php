@@ -18,10 +18,18 @@ class Semaphore
      */
     protected $isAcquired;
 
+    /**
+     * Creator process pid
+     *
+     * @var int
+     */
+    protected $pid;
+
     public function __construct($key = null)
     {
-        $this->isAcquired = false;
+        $this->pid = getmypid();
 
+        $this->isAcquired = false;
         if ($key) {
             $semKey = $key;
         } else {
@@ -39,6 +47,20 @@ class Semaphore
     {
         if ($this->isAcquired()) {
             $this->release();
+        }
+
+        if ($this->pid === getmypid()) {
+            $this->remove();
+        }
+    }
+
+    /**
+     * Remove semaphore.
+     */
+    public function remove()
+    {
+        if (is_resource($this->mutex)) {
+            sem_remove($this->mutex);
         }
 
         if (file_exists($this->file)) {

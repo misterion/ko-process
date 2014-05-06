@@ -6,7 +6,7 @@ class SharedMemory implements \ArrayAccess, \Countable
     /**
      * @var resource
      */
-    protected $id;
+    public $id;
 
     /**
      * @var string
@@ -33,8 +33,17 @@ class SharedMemory implements \ArrayAccess, \Countable
      */
     protected $keyIndex;
 
+    /**
+     * Creator process pid
+     *
+     * @var int
+     */
+    protected $pid;
+
     public function __construct($memorySize = 1024)
     {
+        $this->pid = getmypid();
+
         $this->keyMapper = [];
         $this->keyIndex = 1;
 
@@ -52,6 +61,14 @@ class SharedMemory implements \ArrayAccess, \Countable
     }
 
     public function __destruct()
+    {
+        if ($this->pid === getmypid()) {
+            unset($this->mutex); //Destroy mutex first because of we share same System V IPC key.
+            $this->remove();
+        }
+    }
+
+    public function remove()
     {
         if (is_resource($this->id)) {
             shm_remove($this->id);
