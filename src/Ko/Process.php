@@ -70,7 +70,7 @@ class Process
     /**
      * @param \Ko\SharedMemory $sharedMemory
      */
-    public function setSharedMemory($sharedMemory)
+    public function setSharedMemory(SharedMemory $sharedMemory)
     {
         $this->sharedMemory = $sharedMemory;
     }
