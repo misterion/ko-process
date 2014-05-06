@@ -68,16 +68,19 @@ class ProcessManager implements \Countable
             return;
         }
 
-        if (!$this->sigTerm) {
-            $p = $this->spawnWatch[$pid];
-            $p->setStatus($status);
-
-            if (!$p->isSuccessExit()) {
-                $this->internalSpawn($this->spawnWatch[$pid]);
-            }
+        if ($this->sigTerm) {
+            unset($this->spawnWatch[$pid]);
+            return;
         }
 
+        $p = $this->spawnWatch[$pid];
         unset($this->spawnWatch[$pid]);
+
+        $p->setStatus($status);
+
+        if (!$p->isSuccessExit()) {
+            $this->internalSpawn($p);
+        }
     }
 
     protected function internalSpawn(Process $p)
@@ -95,8 +98,8 @@ class ProcessManager implements \Countable
      */
     protected function internalFork(Process $p)
     {
-        $sm = new SharedMemory();
-        $p->setSharedMemory($sm);
+        $sm = $p->getSharedMemory();
+        $sm['__started'] = false;
 
         $pid = pcntl_fork();
         if (-1 === $pid) {
@@ -124,7 +127,7 @@ class ProcessManager implements \Countable
 
         while ($x++ < 100) {
             usleep(self::WAIT_IDLE);
-            if ($sm['started'] === true) {
+            if ($sm['__started'] === true) {
                 return;
             }
         }
@@ -148,6 +151,7 @@ class ProcessManager implements \Countable
     protected function createProcess(callable $callable)
     {
         $p = new Process($callable);
+        $p->setSharedMemory(new SharedMemory());
         $p->on('exit', function ($pid) use ($p) {
             $this->childProcessDie($pid, $p->getStatus());
         });

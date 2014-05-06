@@ -1,5 +1,6 @@
 <?php
-namespace Ko;
+use Ko\Process;
+use Ko\ProcessManager;
 
 /**
  * Class ProcessManagerTest
@@ -43,22 +44,17 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testSpawnReturnProcess()
     {
-        $process = $this->manager->spawn(
-            function (Process $process) {
-            }
-        );
+        $process = $this->manager->spawn(function () {});
 
         $this->assertInstanceOf('Ko\Process', $process);
     }
 
     public function testReSpawnIfProcessFailExit()
     {
-        $process = $this->manager->spawn(
-            function (Process $process) {
-                usleep(5000);
-                exit(-1);
-            }
-        );
+        $process = $this->manager->spawn(function () {
+            usleep(5000);
+            exit(-1);
+        });
 
         $pid = $process->getPid();
         $process->wait();
@@ -69,11 +65,9 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testNotReSpawnIfProcessSuccessExit()
     {
-        $process = $this->manager->spawn(
-            function (Process $process) {
-                usleep(5000);
-            }
-        );
+        $process = $this->manager->spawn(function () {
+            usleep(5000);
+        });
 
         $process->wait();
         $this->assertFalse($this->manager->hasAlive());
@@ -81,22 +75,18 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testHasAliveAfterFork()
     {
-        $this->manager->fork(
-            function (Process $process) {
-                usleep(5000);
-            }
-        );
+        $this->manager->fork(function () {
+            usleep(5000);
+        });
 
         $this->assertTrue($this->manager->hasAlive());
     }
 
     public function testHasNoAliveAfterWait()
     {
-        $this->manager->fork(
-            function (Process $process) {
-                usleep(5000);
-            }
-        );
+        $this->manager->fork(function () {
+            usleep(5000);
+        });
 
         $this->manager->wait();
         $this->assertFalse($this->manager->hasAlive());
@@ -104,11 +94,9 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testCountableInterface()
     {
-        $this->manager->fork(
-            function (Process $process) {
-                usleep(5000);
-            }
-        );
+        $this->manager->fork(function () {
+            usleep(5000);
+        });
 
         $this->assertCount(1, $this->manager);
         $this->assertEquals(1, $this->manager->getProcessCount());
@@ -139,7 +127,7 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($sm['wasCalled']);
     }
 
-    private function waitReady(\Ko\Process $process)
+    private function waitReady(Process $process)
     {
         $x = 100;
         $sm = $process->getSharedMemory();
@@ -169,5 +157,22 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
     private function processExistsByTitle($title)
     {
         return is_numeric(exec('ps aux|grep -w ' . $title . ' |grep -v grep |awk \'{print $2}\'', $out));
+    }
+
+    public function testReSpawnedProcessHasPersistSharedMemorySegment()
+    {
+        $process = $this->manager->spawn(function(Process $p) {
+            $sm = $p->getSharedMemory();
+            $sm['spawnCount'] += 1;
+
+            $exitCode = ($sm['spawnCount'] == 1)
+                ? -1
+                : 0;
+
+            exit ($exitCode);
+        });
+
+        $this->manager->wait();
+        $this->assertEquals(2, $process->getSharedMemory()['spawnCount']);
     }
 }

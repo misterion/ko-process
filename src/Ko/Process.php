@@ -88,7 +88,7 @@ class Process
      */
     public function run()
     {
-        $this->sharedMemory['started'] = true;
+        $this->sharedMemory['__started'] = true;
 
         pcntl_signal(SIGTERM, function () {
             $this->shouldShutdown = true;
