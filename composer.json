@@ -14,6 +14,8 @@
     "suggest": {
         "ext-proctitle": "*",
         "ext-pcntl": "*",
+        "ext-sysvsem": "Required for using the Semaphore class",
+        "ext-sysvshm": "Required for using the SharedMemory class",
         "ext-posix": "*"
     },
     "require": {
