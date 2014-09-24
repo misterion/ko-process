@@ -64,6 +64,10 @@ class Process
      */
     public function getSharedMemory()
     {
+        if ($this->sharedMemory === null) {
+            $this->setSharedMemory(new SharedMemory());
+        }
+
         return $this->sharedMemory;
     }
 

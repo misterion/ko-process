@@ -151,7 +151,6 @@ class ProcessManager implements \Countable
     protected function createProcess(callable $callable)
     {
         $p = new Process($callable);
-        $p->setSharedMemory(new SharedMemory());
         $p->on('exit', function ($pid) use ($p) {
             $this->childProcessDie($pid, $p->getStatus());
         });
