@@ -24,16 +24,6 @@ class SharedMemory implements \ArrayAccess, \Countable
     protected $mutex;
 
     /**
-     * @var array
-     */
-    protected $keyMapper;
-
-    /**
-     * @var int
-     */
-    protected $keyIndex;
-
-    /**
      * Creator process pid
      *
      * @var int
@@ -43,9 +33,6 @@ class SharedMemory implements \ArrayAccess, \Countable
     public function __construct($memorySize = 1024)
     {
         $this->pid = getmypid();
-
-        $this->keyMapper = [];
-        $this->keyIndex = 1;
 
         $this->size = $memorySize;
 
@@ -57,6 +44,8 @@ class SharedMemory implements \ArrayAccess, \Countable
             throw new \RuntimeException('Unable to create the shared memory segment');
         }
 
+        //Keymapper (maps mixed to integers)
+        shm_put_var($this->id, 0, []) ;
         $this->mutex = new Semaphore($key);
     }
 
@@ -95,19 +84,44 @@ class SharedMemory implements \ArrayAccess, \Countable
      */
     public function offsetExists($offset)
     {
-        return $this->mutex->lockExecute(function() use ($offset) {
+        $task = function() use ($offset) {
             return shm_has_var($this->id, $this->getKey($offset));
-        });
+        } ;
+
+        if($this->mutex->isAcquired())
+            return $task() ;
+        else
+            return $this->mutex->lockExecute($task) ;
+    }
+    
+    public function getKeys()
+    {
+        return array_keys($this->getKeyMap()) ;
     }
 
+    protected function getKeyMap()
+    {
+        $task = function() {
+            return shm_get_var($this->id, 0) ;
+        } ;
+        
+        return $this->lockExecute($task) ;
+    }
+    
     protected function getKey($offset)
     {
-        if (isset($this->keyMapper[$offset])) {
-            return $this->keyMapper[$offset];
+        $keyMapper = $this->getKeyMap() ;
+        if (isset($keyMapper[$offset])) {
+            return $keyMapper[$offset];
         }
 
-        $this->keyMapper[$offset] =  $this->keyIndex++;
-        return $this->keyMapper[$offset];
+        //Get the next available integer for shm
+        if(count($keyMapper) > 0)
+            $keyMapper[$offset] = max($keyMapper)+1 ;
+        else
+            $keyMapper[$offset] = 1 ;
+        shm_put_var($this->id, 0, $keyMapper);
+        return $keyMapper[$offset] ;
     }
 
     /**
@@ -123,14 +137,16 @@ class SharedMemory implements \ArrayAccess, \Countable
      */
     public function offsetGet($offset)
     {
-        return $this->mutex->lockExecute(function() use ($offset) {
+        $task = function() use ($offset) {
             $key = $this->getKey($offset);
             if(shm_has_var($this->id, $key)) {
                 return shm_get_var($this->id, $key);
             }
 
             return null;
-        });
+        } ;
+
+        return $this->lockExecute($task) ;
     }
 
     /**
@@ -149,9 +165,11 @@ class SharedMemory implements \ArrayAccess, \Countable
      */
     public function offsetSet($offset, $value)
     {
-        $this->mutex->lockExecute(function() use ($offset, $value) {
+        $task = function() use ($offset,$value) {
             shm_put_var($this->id, $this->getKey($offset), $value);
-        });
+        } ;
+
+        $this->lockExecute($task) ;
     }
 
     /**
@@ -167,11 +185,16 @@ class SharedMemory implements \ArrayAccess, \Countable
      */
     public function offsetUnset($offset)
     {
-        $this->mutex->lockExecute(function() use ($offset) {
-            if (shm_remove_var($this->id, $this->getKey($offset))) {
-                unset($this->keyMapper[$offset]);
-            };
-        });
+        $task = function() use ($offset) {
+            $keyMapper = $this->getKeyMap() ;
+            if(array_key_exists($offset,$keyMapper)) {
+                shm_remove_var($this->id, $keyMapper[$offset]) ;
+                unset($keyMapper[$offset]) ;
+                shm_put_var($this->id, 0, $keyMapper);
+            }
+        } ;
+        
+        $this->lockExecute($task) ;
     }
 
     /**
@@ -185,6 +208,45 @@ class SharedMemory implements \ArrayAccess, \Countable
      */
     public function count()
     {
-        return count($this->keyMapper);
+        $task = function() {
+            return count($this->getKeyMap());
+        } ;
+        
+        return $this->lockExecute($task) ;
+    }
+    
+    /**
+     * Lock shared memory if lock not already acquired by this process
+     * 
+     * @param function $task Function to execute
+     * 
+     * @return mixed    Whatever the $task function returns
+     */
+    protected function lockExecute($task)
+    {
+        if($this->mutex->isAcquired())
+            return $task() ;
+        else
+            return $this->mutex->lockExecute($task) ;
+    }
+    
+    /**
+     * Lock shared memory
+     * 
+     * @return boolean    True if locked, otherwise false
+     */
+    public function lock()
+    {
+        return $this->mutex->acquire() ;
+    }
+    
+    /**
+     * Unlock shared memory
+     * 
+     * @return boolean    True if unlocked, otherwise false
+     */
+    public function release()
+    {
+        return $this->mutex->release() ;
     }
 }
