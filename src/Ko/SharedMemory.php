@@ -45,7 +45,7 @@ class SharedMemory implements \ArrayAccess, \Countable
         }
 
         //Keymapper (maps mixed to integers)
-        shm_put_var($this->id, 0, []) ;
+        shm_put_var($this->id, 0, []);
         $this->mutex = new Semaphore($key);
     }
 
@@ -86,42 +86,41 @@ class SharedMemory implements \ArrayAccess, \Countable
     {
         $task = function() use ($offset) {
             return shm_has_var($this->id, $this->getKey($offset));
-        } ;
+        };
 
-        if($this->mutex->isAcquired())
-            return $task() ;
-        else
-            return $this->mutex->lockExecute($task) ;
+        return $this->mutex->lockExecute($task);
     }
     
     public function getKeys()
     {
-        return array_keys($this->getKeyMap()) ;
+        return array_keys($this->getKeyMap());
     }
 
     protected function getKeyMap()
     {
         $task = function() {
-            return shm_get_var($this->id, 0) ;
-        } ;
+            return shm_get_var($this->id, 0);
+        };
         
-        return $this->lockExecute($task) ;
+        return $this->lockExecute($task);
     }
     
     protected function getKey($offset)
     {
-        $keyMapper = $this->getKeyMap() ;
+        $keyMapper = $this->getKeyMap();
         if (isset($keyMapper[$offset])) {
             return $keyMapper[$offset];
         }
 
         //Get the next available integer for shm
-        if(count($keyMapper) > 0)
-            $keyMapper[$offset] = max($keyMapper)+1 ;
-        else
-            $keyMapper[$offset] = 1 ;
+        if(count($keyMapper) > 0) {
+            $keyMapper[$offset] = max($keyMapper)+1;
+        }
+        else {
+            $keyMapper[$offset] = 1;
+        }
         shm_put_var($this->id, 0, $keyMapper);
-        return $keyMapper[$offset] ;
+        return $keyMapper[$offset];
     }
 
     /**
@@ -144,9 +143,9 @@ class SharedMemory implements \ArrayAccess, \Countable
             }
 
             return null;
-        } ;
+        };
 
-        return $this->lockExecute($task) ;
+        return $this->lockExecute($task);
     }
 
     /**
@@ -167,9 +166,9 @@ class SharedMemory implements \ArrayAccess, \Countable
     {
         $task = function() use ($offset,$value) {
             shm_put_var($this->id, $this->getKey($offset), $value);
-        } ;
+        };
 
-        $this->lockExecute($task) ;
+        $this->lockExecute($task);
     }
 
     /**
@@ -186,15 +185,15 @@ class SharedMemory implements \ArrayAccess, \Countable
     public function offsetUnset($offset)
     {
         $task = function() use ($offset) {
-            $keyMapper = $this->getKeyMap() ;
+            $keyMapper = $this->getKeyMap();
             if(array_key_exists($offset,$keyMapper)) {
-                shm_remove_var($this->id, $keyMapper[$offset]) ;
-                unset($keyMapper[$offset]) ;
+                shm_remove_var($this->id, $keyMapper[$offset]);
+                unset($keyMapper[$offset]);
                 shm_put_var($this->id, 0, $keyMapper);
             }
-        } ;
+        };
         
-        $this->lockExecute($task) ;
+        $this->lockExecute($task);
     }
 
     /**
@@ -210,9 +209,9 @@ class SharedMemory implements \ArrayAccess, \Countable
     {
         $task = function() {
             return count($this->getKeyMap());
-        } ;
+        };
         
-        return $this->lockExecute($task) ;
+        return $this->lockExecute($task);
     }
     
     /**
@@ -224,10 +223,11 @@ class SharedMemory implements \ArrayAccess, \Countable
      */
     protected function lockExecute($task)
     {
-        if($this->mutex->isAcquired())
-            return $task() ;
-        else
-            return $this->mutex->lockExecute($task) ;
+        if($this->mutex->isAcquired()) {
+            return $task();
+        }
+
+        return $this->mutex->lockExecute($task);
     }
     
     /**
@@ -237,7 +237,7 @@ class SharedMemory implements \ArrayAccess, \Countable
      */
     public function lock()
     {
-        return $this->mutex->acquire() ;
+        return $this->mutex->acquire();
     }
     
     /**
@@ -247,6 +247,6 @@ class SharedMemory implements \ArrayAccess, \Countable
      */
     public function release()
     {
-        return $this->mutex->release() ;
+        return $this->mutex->release();
     }
 }
