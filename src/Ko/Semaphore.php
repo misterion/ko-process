@@ -69,7 +69,7 @@ class Semaphore
     }
 
     /**
-     * Return TRUE is semaphore acquired.
+     * Return TRUE if semaphore acquired in this process.
      *
      * @return boolean
      */
@@ -99,9 +99,9 @@ class Semaphore
      */
     public function lockExecute(callable $callable)
     {
-        $this->acquire();
+        $this->isAcquired = $this->acquire();
         $result = $callable();
-        $this->release();
+        $this->isAcquired = $this->release();
 
         return $result;
     }

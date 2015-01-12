@@ -54,4 +54,34 @@ class SharedMemoryTest extends \PHPUnit_Framework_TestCase
         unset($sm['test']);
         $this->assertCount(0, $sm);
     }
+    
+    public function testGetKeys()
+    {
+        $sm = new SharedMemory();
+        
+        $sm['test1'] = 'value1';
+        $sm['test2'] = 'value2';
+        $this->assertEquals(array('test1','test2'),$sm->getKeys());
+        
+        unset($sm['test1']);
+        
+        $this->assertEquals(array('test2'),$sm->getKeys());
+    }
+    
+    public function testLockAndRelease()
+    {
+        $sm = new SharedMemory();
+        $sm['test1'] = 'value1';
+        
+        $sm->lock();
+        
+        $this->assertEquals('value1',$sm['test1']);
+
+        $sm['test2'] = $sm['test1'] . "+value2";
+        
+        $sm->release();
+        
+        $this->assertEquals('value1+value2',$sm['test2']);
+    }
+    
 }
