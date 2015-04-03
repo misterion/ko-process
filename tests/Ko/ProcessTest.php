@@ -206,4 +206,20 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         /** @var Process $mock */
         $mock->dispatchSignals();
     }
+
+    public function testLazyCreateSharedMemory()
+    {
+        $process = new Process(function () {});
+        $this->assertInstanceOf('\Ko\SharedMemory', $process->getSharedMemory());
+    }
+
+    public function testDoNotCreateSharedMemoryInAlreadySet()
+    {
+        $sharedMemory = new SharedMemory();
+
+        $process = new Process(function () {});
+        $process->setSharedMemory($sharedMemory);
+
+        $this->assertEquals($sharedMemory, $process->getSharedMemory());
+    }
 }
