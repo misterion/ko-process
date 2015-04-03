@@ -41,6 +41,10 @@ use phpmock\phpunit\PHPMock;
  * @author Nikolay Bondarenko <misterionkell@gmail.com>
  * @version 1.0
  * @since 0.4
+ *
+ * @small
+ * @runInSeparateProcess
+ * @backupGlobals enabled
  */
 class SignalHandlerTest extends \PHPUnit_Framework_TestCase
 {
@@ -63,8 +67,8 @@ class SignalHandlerTest extends \PHPUnit_Framework_TestCase
 
     public function testRegisterHandler()
     {
-        $pcntl_signal = $this->getFunctionMock(__NAMESPACE__, 'pcntl_signal');
-        $pcntl_signal->expects($this->once())
+        $this->getFunctionMock(__NAMESPACE__, 'pcntl_signal')
+            ->expects($this->once())
             ->willReturn(true);
 
         $this->assertEquals($this->handler, $this->handler->registerHandler(SIGTERM, function() {}));
