@@ -192,4 +192,18 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
 
         $this->assertFalse($m->hasAlive());
     }
+
+    public function testDeprecatedDispatchSignalsStillAlive()
+    {
+        $mock = $this->getMockBuilder('\Ko\Process')
+            ->disableOriginalConstructor()
+            ->setMethods(['dispatch'])
+            ->getMock();
+
+        $mock->expects($this->once())
+            ->method('dispatch');
+
+        /** @var Process $mock */
+        $mock->dispatchSignals();
+    }
 }
