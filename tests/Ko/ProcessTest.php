@@ -1,5 +1,37 @@
 <?php
+/**
+ * The MIT License
+ *
+ * Copyright (c) 2014 Nikolay Bondarenko
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * PHP version 5.4
+ *
+ * @package Ko
+ * @author Nikolay Bondarenko
+ * @copyright 2015 Nikolay Bondarenko. All rights reserved.
+ * @license MIT http://opensource.org/licenses/MIT
+ */
 namespace Ko;
+
+use phpmock\phpunit\PHPMock;
 
 /**
  * Class ProcessTest
@@ -7,16 +39,26 @@ namespace Ko;
  * @category Tests
  * @package Ko
  * @author Nikolay Bondarenko <misterionkell@gmail.com>
- * @version 1.0
+ * @version 1.1
  *
  * @small
+ * @runInSeparateProcess
  */
 class ProcessTest extends \PHPUnit_Framework_TestCase
 {
+    use PHPMock;
+
     public function setUp()
     {
         $this->getTestResultObject()
             ->setTimeoutForSmallTests(1);
+
+        //INFO This part of code fix https://bugs.php.net/bug.php?id=68541 issue
+        $this->getFunctionMock(__NAMESPACE__, 'pcntl_signal')
+            ->expects($this->any())
+            ->willReturnCallback(function($signal, $callable) {
+                return \pcntl_signal($signal, $callable);
+            });
     }
 
     public function testRunExecuteCallable()
@@ -139,7 +181,7 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         $process = $m->fork(
             function (Process &$p) {
                 while (!$p->isShouldShutdown()) {
-                    pcntl_signal_dispatch();
+                    $p->dispatch();
                     usleep(100);
                 }
             }
