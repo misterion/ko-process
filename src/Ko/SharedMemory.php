@@ -217,11 +217,11 @@ class SharedMemory implements \ArrayAccess, \Countable
     /**
      * Lock shared memory if lock not already acquired by this process
      * 
-     * @param function $task Function to execute
+     * @param callable $task Function to execute
      * 
      * @return mixed    Whatever the $task function returns
      */
-    protected function lockExecute($task)
+    protected function lockExecute(callable $task)
     {
         if($this->mutex->isAcquired()) {
             return $task();
