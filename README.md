@@ -8,9 +8,10 @@
 [![Latest Unstable Version][unstable-image]][unstable-url]
 [![License][license-image]][license-url]
 
-Ko-Process allows for easy callable forking. It is object-oriented wrapper arount fork part of
+Ko-Process allows for easy callable forking. It is object-oriented wrapper around fork part of
 [`PCNTL`](http://php.net/manual/ru/book.pcntl.php) PHP's extension. Background process, detaching process from the
-controlling terminal, signals and exit codes and simple IPC.
+controlling terminal, signals and exit codes and simple IPC via shared memory. This is well tested library used in 
+real world high load projects.
 
 # Installation #
 
