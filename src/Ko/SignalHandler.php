@@ -72,6 +72,8 @@ class SignalHandler implements \Countable
 
     public function __construct()
     {
+        $this->handlers = [];
+
         $this->signalQueue = new \SplQueue();
         $this->signalQueue->setIteratorMode(\SplQueue::IT_MODE_DELETE);
     }
@@ -89,6 +91,7 @@ class SignalHandler implements \Countable
     {
         if (!isset($this->handlers[$signal])) {
             $this->handlers[$signal] = [];
+
             if (!pcntl_signal($signal, [$this, 'handleSignal'])) {
                 throw new \RuntimeException(sprintf('Could not register signal %d with pcntl_signal', $signal));
             };
