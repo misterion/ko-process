@@ -2,7 +2,7 @@
 /**
  * The MIT License
  *
- * Copyright (c) 2014 Nikolay Bondarenko
+ * Copyright (c) 2015 Nikolay Bondarenko <misterionkell@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,8 +53,8 @@ namespace Ko;
  * </example>
  *
  * @package Ko
- * @copyright 2014 Nikolay Bondarenko. All rights reserved.
  * @author Nikolay Bondarenko <misterionkell@gmail.com>
+ * @copyright 2015 Nikolay Bondarenko. All rights reserved.
  * @version 1.0
  * @since 0.4
  */
