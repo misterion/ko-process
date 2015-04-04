@@ -80,7 +80,7 @@ $manager->onShutdown(function() use ($manager) {
 
 echo 'Execute `kill ' . getmypid() . '` from console to stop script' . PHP_EOL;
 while(true) {
-    $manager->dispatchSignals();
+    $manager->dispatch();
     sleep(1);
 }
 ```
@@ -137,8 +137,8 @@ $manager->spawn(function(Ko\Process $p) {
 
         $p->setProcessTitle('Worker:waiting for job... ');
 
-        //IMPORTANT! You should call dispatchSignals them self to process pending signals.
-        $p->dispatchSignals();
+        //IMPORTANT! You should call dispatch() them self to process pending signals.
+        $p->dispatch();
 
         if ($p->isShouldShutdown()) {
             exit();
