@@ -1,16 +1,17 @@
 # ko-process #
 
-[![Build Status](https://travis-ci.org/misterion/ko-process.png?branch=master)](https://travis-ci.org/misterion/ko-process)
-[![Latest Stable Version](https://poser.pugx.org/misterion/ko-process/v/stable.png)](https://packagist.org/packages/misterion/ko-process)
-[![Code Coverage](https://scrutinizer-ci.com/g/misterion/ko-process/badges/coverage.png?s=5bbe5065d230fc69e11e3c34747fec724d3dd6d6)](https://scrutinizer-ci.com/g/misterion/ko-process/)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/misterion/ko-process/badges/quality-score.png?s=58747cee35694c4bc2b023b2ee5a66f4066de3f7)](https://scrutinizer-ci.com/g/misterion/ko-process/)
-[![Total Downloads](https://poser.pugx.org/misterion/ko-process/downloads.png)](https://packagist.org/packages/misterion/ko-process)
-[![Latest Unstable Version](https://poser.pugx.org/misterion/ko-process/v/unstable.png)](https://packagist.org/packages/misterion/ko-process)
-[![License](https://poser.pugx.org/misterion/ko-process/license.png)](https://packagist.org/packages/misterion/ko-process)
+[![Build Status][travis-image]][travis-url]
+[![Latest Stable Version][stable-image]][stable-url]
+[![Code Coverage][coverage-image]][coverage-url]
+[![Scrutinizer Code Quality][code-quality-image]][code-quality-url]
+[![Total Downloads][downloads-image]][downloads-url]
+[![Latest Unstable Version][unstable-image]][unstable-url]
+[![License][license-image]][license-url]
 
-Ko-Process allows for easy callable forking. It is object-oriented wrapper arount fork part of
+Ko-Process allows for easy callable forking. It is object-oriented wrapper around fork part of
 [`PCNTL`](http://php.net/manual/ru/book.pcntl.php) PHP's extension. Background process, detaching process from the
-controlling terminal, signals and exit codes and simple IPC.
+controlling terminal, signals and exit codes and simple IPC via shared memory. This is well tested library used in 
+real world high load projects.
 
 # Installation #
 
@@ -80,7 +81,7 @@ $manager->onShutdown(function() use ($manager) {
 
 echo 'Execute `kill ' . getmypid() . '` from console to stop script' . PHP_EOL;
 while(true) {
-    $manager->dispatchSignals();
+    $manager->dispatch();
     sleep(1);
 }
 ```
@@ -137,8 +138,8 @@ $manager->spawn(function(Ko\Process $p) {
 
         $p->setProcessTitle('Worker:waiting for job... ');
 
-        //IMPORTANT! You should call dispatchSignals them self to process pending signals.
-        $p->dispatchSignals();
+        //IMPORTANT! You should call dispatch() them self to process pending signals.
+        $p->dispatch();
 
         if ($p->isShouldShutdown()) {
             exit();
@@ -200,3 +201,18 @@ Released under the [MIT](LICENSE) license.
 ### Links ###
 
 * [Project profile on the Ohloh](https://www.ohloh.net/p/ko-process)
+
+[travis-image]: https://travis-ci.org/misterion/ko-process.png?branch=master
+[travis-url]: https://travis-ci.org/misterion/ko-process
+[code-quality-image]: https://scrutinizer-ci.com/g/misterion/ko-process/badges/quality-score.png?s=58747cee35694c4bc2b023b2ee5a66f4066de3f7
+[code-quality-url]: https://scrutinizer-ci.com/g/misterion/ko-process/
+[coverage-image]: https://scrutinizer-ci.com/g/misterion/ko-process/badges/coverage.png?s=5bbe5065d230fc69e11e3c34747fec724d3dd6d6
+[coverage-url]: https://scrutinizer-ci.com/g/misterion/ko-process/
+[stable-image]: https://poser.pugx.org/misterion/ko-process/v/stable.png
+[stable-url]: https://packagist.org/packages/misterion/ko-process
+[unstable-image]: https://poser.pugx.org/misterion/ko-process/v/unstable.png
+[unstable-url]: https://packagist.org/packages/misterion/ko-process
+[license-image]: https://poser.pugx.org/misterion/ko-process/license.png
+[license-url]: https://packagist.org/packages/misterion/ko-process
+[downloads-image]: https://poser.pugx.org/misterion/ko-process/downloads.png
+[downloads-url]: https://packagist.org/packages/misterion/ko-process
