@@ -82,13 +82,17 @@ class SignalHandler implements \Countable
      * Register given callable with pcntl signal.
      *
      * @param int $signal The pcntl signal.
-     * @param callable $handler The signal handler.
+     * @param callback $handler The signal handler.
      *
      * @return $this
      * @throws \RuntimeException If could not register handler with pcntl_signal.
      */
-    public function registerHandler($signal, callable $handler)
+    public function registerHandler($signal, $handler)
     {
+        if (!is_callable($handler)) {
+            throw new \InvalidArgumentException('The handler is not callable');
+        }
+
         if (!isset($this->handlers[$signal])) {
             $this->handlers[$signal] = [];
 
