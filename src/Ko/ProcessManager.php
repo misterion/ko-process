@@ -48,7 +48,6 @@ class ProcessManager implements \Countable
         emit as protected internalEmit;
     }
 
-    const WAIT_IDLE = 1000;
     /**
      * @var Process[]
      */
@@ -74,27 +73,43 @@ class ProcessManager implements \Countable
         $this->children = [];
         $this->spawnWatch = [];
         $this->sigTerm = false;
-        $this->signalHandler = new SignalHandler();
 
         $this->setupSignalHandlers();
     }
 
     protected function setupSignalHandlers()
     {
-        $this->signalHandler->registerHandler(SIGCHLD, function () {
-            while (($pid = pcntl_waitpid(-1, $status, WNOHANG)) > 0) {
-                $this->childProcessDie($pid, $status);
-            }
+        $this->signalHandler = new SignalHandler();
+        $this->signalHandler->registerHandler(SIGCHLD, function() {
+            $this->handleSigChild();
         });
 
-        $this->signalHandler->registerHandler(SIGTERM, function () {
-            $this->sigTerm = true;
-            $this->internalEmit('shutdown');
-
-            foreach ($this->children as $process) {
-                $process->kill();
-            }
+        $this->signalHandler->registerHandler(SIGTERM, function() {
+            $this->handleSigTerm();
         });
+    }
+
+    /**
+     * @internal
+     */
+    public function handleSigChild()
+    {
+        while (($pid = pcntl_waitpid(-1, $status, WNOHANG)) > 0) {
+            $this->childProcessDie($pid, $status);
+        }
+    }
+
+    /**
+     * @internal
+     */
+    public function handleSigTerm()
+    {
+        $this->sigTerm = true;
+        $this->internalEmit('shutdown');
+
+        foreach ($this->children as $process) {
+            $process->kill();
+        }
     }
 
     protected function childProcessDie($pid, $status)
@@ -114,9 +129,11 @@ class ProcessManager implements \Countable
 
         $p->setStatus($status);
 
-        if (!$p->isSuccessExit()) {
-            $this->internalSpawn($p);
+        if ($p->isSuccessExit()) {
+            return;
         }
+
+        $this->internalSpawn($p);
     }
 
     protected function internalSpawn(Process $p)
@@ -134,8 +151,7 @@ class ProcessManager implements \Countable
      */
     protected function internalFork(Process $p)
     {
-        $sm = $p->getSharedMemory();
-        $sm['__started'] = false;
+        $p->setReady(false);
 
         $pid = pcntl_fork();
         if (-1 === $pid) {
@@ -145,30 +161,14 @@ class ProcessManager implements \Countable
         if ($pid) {
             $this->children[$pid] = $p;
 
-            $p->setPid($pid);
-            $this->waitProcessRunning($p);
-            return $p;
+            return $p->setPid($pid)
+                ->waitReady();
         }
 
-        $p->setPid(getmypid());
-        $p->run();
+        $p->setPid(getmypid())
+            ->run();
 
         exit(0);
-    }
-
-    protected function waitProcessRunning(Process $p)
-    {
-        $x = 0;
-        $sm = $p->getSharedMemory();
-
-        while ($x++ < 100) {
-            usleep(self::WAIT_IDLE);
-            if ($sm['__started'] === true) {
-                return;
-            }
-        }
-
-        throw new \RuntimeException('Wait process running timeout for child pid ' . $p->getPid());
     }
 
     /**
