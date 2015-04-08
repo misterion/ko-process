@@ -136,7 +136,7 @@ class SignalHandler implements \Countable
 
         foreach ($this->signalQueue as $signal) {
             foreach ($this->handlers[$signal] as &$callable) {
-                $callable($signal);
+                call_user_func($callable, $signal);
             }
         }
 
