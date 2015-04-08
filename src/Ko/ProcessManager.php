@@ -39,6 +39,8 @@ namespace Ko;
  * @author Nikolay Bondarenko <misterionkell@gmail.com>
  * @copyright 2015 Nikolay Bondarenko. All rights reserved.
  * @version 1.0
+ *
+ * @SuppressWarnings(PHPMD.ExitExpression)
  */
 class ProcessManager implements \Countable
 {
