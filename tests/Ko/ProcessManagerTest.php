@@ -233,4 +233,9 @@ class ProcessManagerTest extends \PHPUnit_Framework_TestCase
         /** @var ProcessManager $mock */
         $mock->dispatchSignals();
     }
+
+    public function testSigTermHandler()
+    {
+
+    }
 }

@@ -99,6 +99,14 @@ class SignalHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1, $this->handler);
     }
 
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testRegisterNonCallable()
+    {
+        $this->handler->registerHandler(SIGTERM, 'badHandler');
+    }
+
     public function testHandlerWasCalledWithDispatch()
     {
         $callableWasCalled = false;
