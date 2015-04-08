@@ -174,7 +174,7 @@ class Process implements \ArrayAccess, \Countable
             $this->shouldShutdown = true;
         });
 
-        $this->sharedMemory[Process::STARTED_MARKER] = true;
+        $this->sharedMemory[self::STARTED_MARKER] = true;
 
         /** @var callable $callable */
         $callable = $this->callable;
@@ -347,7 +347,7 @@ class Process implements \ArrayAccess, \Countable
      */
     public function setReady($value)
     {
-        $this[Process::STARTED_MARKER] = $value;
+        $this[self::STARTED_MARKER] = $value;
         return $this;
     }
 
@@ -360,7 +360,7 @@ class Process implements \ArrayAccess, \Countable
      */
     public function isReady()
     {
-        return (bool)$this[Process::STARTED_MARKER];
+        return (bool)$this[self::STARTED_MARKER];
     }
 
     /**
@@ -375,8 +375,8 @@ class Process implements \ArrayAccess, \Countable
     {
         $x = 0;
         while ($x++ < 100) {
-            usleep(Process::WAIT_IDLE);
-            if ($this[Process::STARTED_MARKER] === true) {
+            usleep(self::WAIT_IDLE);
+            if ($this[self::STARTED_MARKER] === true) {
                 return $this;
             }
         }
