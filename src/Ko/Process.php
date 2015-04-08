@@ -49,6 +49,11 @@ class Process implements \ArrayAccess, \Countable
     }
 
     /**
+     * Shared memory internal variables used to mark process as completely initialized.
+     */
+    const STARTED_MARKER = '__started';
+
+    /**
      * Posix process id.
      *
      * @var int
@@ -129,7 +134,7 @@ class Process implements \ArrayAccess, \Countable
      */
     public function run()
     {
-        $this->sharedMemory['__started'] = true;
+        $this->sharedMemory[self::STARTED_MARKER] = true;
 
         $this->signalHandler = new SignalHandler();
         $this->signalHandler->registerHandler(SIGTERM, function () {
