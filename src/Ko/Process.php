@@ -50,8 +50,17 @@ class Process implements \ArrayAccess, \Countable
 
     /**
      * Shared memory internal variables used to mark process as completely initialized.
+     *
+     * @internal
      */
     const STARTED_MARKER = '__started';
+
+    /**
+     * Wait ready timeout in milliseconds.
+     *
+     * @internal
+     */
+    const WAIT_IDLE = 1000;
 
     /**
      * Posix process id.
@@ -115,10 +124,36 @@ class Process implements \ArrayAccess, \Countable
 
     /**
      * @param \Ko\SharedMemory $sharedMemory
+     *
+     * @return $this
      */
     public function setSharedMemory(SharedMemory $sharedMemory)
     {
         $this->sharedMemory = $sharedMemory;
+        return $this;
+    }
+
+    /**
+     * @return SignalHandler
+     */
+    public function getSignalHandler()
+    {
+        if ($this->signalHandler === null) {
+            $this->setSignalHandler(new SignalHandler());
+        }
+
+        return $this->signalHandler;
+    }
+
+    /**
+     * @param SignalHandler $signalHandler
+     *
+     * @return $this
+     */
+    public function setSignalHandler(SignalHandler $signalHandler)
+    {
+        $this->signalHandler = $signalHandler;
+        return $this;
     }
 
     /**
@@ -134,12 +169,12 @@ class Process implements \ArrayAccess, \Countable
      */
     public function run()
     {
-        $this->sharedMemory[self::STARTED_MARKER] = true;
-
-        $this->signalHandler = new SignalHandler();
-        $this->signalHandler->registerHandler(SIGTERM, function () {
+        $signalHandler = $this->getSignalHandler();
+        $signalHandler->registerHandler(SIGTERM, function () {
             $this->shouldShutdown = true;
         });
+
+        $this->sharedMemory[self::STARTED_MARKER] = true;
 
         /** @var callable $callable */
         $callable = $this->callable;
@@ -296,8 +331,57 @@ class Process implements \ArrayAccess, \Countable
      */
     public function dispatch()
     {
-        $this->signalHandler->dispatch();
+        $this->getSignalHandler()
+            ->dispatch();
+
         return $this;
+    }
+
+    /**
+     * Mark process as completely initialized. Any object, which need to handle Process life time should use this
+     * flag to build they internal login about process handling.
+     *
+     * @param bool $value
+     *
+     * @return $this
+     */
+    public function setReady($value)
+    {
+        $this[self::STARTED_MARKER] = $value;
+        return $this;
+    }
+
+    /**
+     * Return True is process is ready.
+     *
+     * @return bool
+     *
+     * @see setReady
+     */
+    public function isReady()
+    {
+        return (bool)$this[self::STARTED_MARKER];
+    }
+
+    /**
+     * Wait Process is completely initialized.
+     *
+     * @return $this;
+     *
+     * @limitation This method should not to be called from child process.
+     * @throw \RuntimeException If time out occurred during wait;
+     */
+    public function waitReady()
+    {
+        $x = 0;
+        while ($x++ < 100) {
+            usleep(self::WAIT_IDLE);
+            if ($this[Process::STARTED_MARKER] === true) {
+                return $this;
+            }
+        }
+
+        throw new \RuntimeException('Wait process running timeout for child pid ' . $this->getPid());
     }
 
     /**
@@ -316,7 +400,8 @@ class Process implements \ArrayAccess, \Countable
      */
     public function offsetExists($offset)
     {
-        return $this->sharedMemory->offsetExists($offset);
+        $sm = $this->getSharedMemory();
+        return $sm->offsetExists($offset);
     }
 
     /**
@@ -332,7 +417,8 @@ class Process implements \ArrayAccess, \Countable
      */
     public function offsetGet($offset)
     {
-        return $this->sharedMemory->offsetGet($offset);
+        $sm = $this->getSharedMemory();
+        return $sm->offsetGet($offset);
     }
 
     /**
@@ -351,7 +437,8 @@ class Process implements \ArrayAccess, \Countable
      */
     public function offsetSet($offset, $value)
     {
-        $this->sharedMemory->offsetSet($offset, $value);
+        $sm = $this->getSharedMemory();
+        $sm->offsetSet($offset, $value);
     }
 
     /**
@@ -367,7 +454,8 @@ class Process implements \ArrayAccess, \Countable
      */
     public function offsetUnset($offset)
     {
-        $this->sharedMemory->offsetUnset($offset);
+        $sm = $this->getSharedMemory();
+        $sm->offsetUnset($offset);
     }
 
     /**
@@ -381,6 +469,7 @@ class Process implements \ArrayAccess, \Countable
      */
     public function count()
     {
-        return $this->sharedMemory->count();
+        $sm = $this->getSharedMemory();
+        return $sm->count();
     }
 }

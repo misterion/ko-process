@@ -222,4 +222,136 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($sharedMemory, $process->getSharedMemory());
     }
+
+    /**
+     * @return Process
+     */
+    public function testIsNotReadyAfterCreation()
+    {
+        $process = new Process(function () {});
+        $this->assertFalse($process->isReady());
+
+        return $process;
+    }
+
+    /**
+     * @param Process $process
+     * @return Process
+     *
+     * @depends testIsNotReadyAfterCreation
+     */
+    public function testSetReady(Process $process)
+    {
+        $this->assertEquals($process, $process->setReady(true));
+        $this->assertTrue($process->isReady());
+
+        return $process;
+    }
+
+    /**
+     * @param Process $process
+     * @return Process
+     *
+     * @depends testSetReady
+     */
+    public function testSuccessWaitReady(Process $process)
+    {
+        $this->assertEquals($process, $process->waitReady());
+        return $process;
+    }
+
+    /**
+     * @param Process $process
+     *
+     * @return Process
+     *
+     * @depends testSuccessWaitReady
+     */
+    public function testSetProcessNotReady(Process $process)
+    {
+        $this->assertEquals($process, $process->setReady(false));
+        $this->assertFalse($process->isReady());
+
+        return $process;
+    }
+
+    /**
+     * @param Process $process
+     * @return Process
+     *
+     * @depends testSetProcessNotReady
+     *
+     * @expectedException \RuntimeException
+     */
+    public function testFailedWaitReady(Process $process)
+    {
+        $process->waitReady();
+    }
+
+    public function testDispatch()
+    {
+        $mock = $this->getMock('Ko\SignalHandler', ['dispatch']);
+        $mock->expects($this->once())
+            ->method('dispatch');
+
+        /**@var SignalHandler $mock */
+        $process = new Process(function () {});
+        $process->setSignalHandler($mock);
+        $process->dispatch();
+    }
+
+    public function testImplementsCountableInterface()
+    {
+        $process = new Process(function () {});
+        $this->assertInstanceOf('\Countable', $process);
+    }
+
+    public function testImplementsArrayAccessInterface()
+    {
+        $process = new Process(function () {});
+        $this->assertInstanceOf('\ArrayAccess', $process);
+    }
+
+    /**
+     * The main reason is no ant exceptions during test case.
+     *
+     * @return Process
+     */
+    public function testArrayAccessSet()
+    {
+        $process = new Process(function () {});
+        $process['a'] = 1;
+        $process[0] = 2;
+
+        $this->assertCount(2, $process);
+
+        return $process;
+    }
+
+    /**
+     * @depends testArrayAccessSet
+     * @param Process $process
+     *
+     * @return Process
+     */
+    public function testArrayAccessGet(Process $process)
+    {
+        $this->assertTrue(isset($process['a']));
+        $this->assertEquals(1, $process['a']);
+        $this->assertTrue(isset($process[0]));
+        $this->assertEquals(2, $process[0]);
+
+        return $process;
+    }
+
+    /**
+     * @depends testArrayAccessGet
+     * @param Process $process
+     */
+    public function testArrayAccessUnset(Process $process)
+    {
+        unset($process['a']);
+        $this->assertFalse(isset($process['a']));
+        $this->assertEquals(null, $process['a']);
+    }
 }
