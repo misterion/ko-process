@@ -99,6 +99,9 @@ class ProcessManager implements \Countable
         while (($pid = pcntl_waitpid(-1, $status, WNOHANG)) > 0) {
             $this->childProcessDie($pid, $status);
         }
+
+        //INFO Fix issue https://github.com/misterion/ko-process/pull/15
+        gc_collect_cycles();
     }
 
     /**
