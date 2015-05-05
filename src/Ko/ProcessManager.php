@@ -240,7 +240,7 @@ class ProcessManager implements \Countable
      */
     public function getProcessCount()
     {
-        return count($this);
+        return count($this->children);
     }
 
     /**
