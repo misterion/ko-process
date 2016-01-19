@@ -105,7 +105,7 @@ for ($i = 0; $i < 10; $i++) {
 $manager->wait(); //we have auto respawn for 10 forks
 ```
 
-Let`s explain you are writing something like queue worker based on PhpAmqpLib\AMPQ. So yoy can write something like this
+Let`s explain you are writing something like queue worker based on PhpAmqpLib\AMPQ. So you can write something like this
 ```php
 
 use PhpAmqpLib\Connection\AMQPConnection;
