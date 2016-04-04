@@ -110,11 +110,12 @@ class ProcessManager implements \Countable
     public function handleSigTerm()
     {
         $this->sigTerm = true;
-        $this->internalEmit('shutdown');
 
         foreach ($this->children as $process) {
             $process->kill();
         }
+        
+        $this->internalEmit('shutdown');
     }
 
     protected function childProcessDie($pid, $status)
