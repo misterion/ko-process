@@ -48,7 +48,7 @@ trait ProcessTitle
      */
     public function setProcessTitle($title)
     {
-        if(function_exists('cli_set_process_title')) {
+        if(function_exists('cli_set_process_title') && PHP_OS !== 'Darwin') {
             cli_set_process_title($title); //PHP >= 5.5.
         } else if(function_exists('setproctitle')) {
             setproctitle($title); //PECL proctitle
@@ -62,7 +62,7 @@ trait ProcessTitle
      */
     public function getProcessTitle()
     {
-        if(function_exists('cli_get_process_title')) {
+        if(function_exists('cli_set_process_title') && PHP_OS !== 'Darwin') {
             return cli_get_process_title(); //PHP >= 5.5.
         } else {
             return exec('ps -p ' . getmypid() . ' -o command| tail -1', $out);
@@ -76,6 +76,6 @@ trait ProcessTitle
      */
     public function isProcessTitleSupported()
     {
-        return function_exists('cli_set_process_title') || function_exists('setproctitle');
+        return (function_exists('cli_set_process_title') && PHP_OS !== 'Darwin') || function_exists('setproctitle');
     }
 }
